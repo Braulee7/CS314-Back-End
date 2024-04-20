@@ -2,7 +2,10 @@ name: Jest Tests
 on:
   push:
     branches:
-      - main # Adjust this to your default branch name
+      - main
+  pull-request:
+    branches:
+      - main
 
 jobs:
   test:
