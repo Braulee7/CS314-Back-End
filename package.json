@@ -1,10 +1,12 @@
 {
+  "type": "module",
   "name": "back-end",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node bin"
+    "dev": "node bin",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +16,8 @@
     "express": "^4.19.2",
     "pg": "^8.11.5"
   },
-  "type": "module"
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  }
 }
