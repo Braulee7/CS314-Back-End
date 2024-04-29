@@ -1,5 +1,6 @@
 import express from "express";
 import makeUserRouter from "../routes/user.js";
+import bcrypt from "bcrypt";
 import request from "supertest";
 import { jest } from "@jest/globals";
 
@@ -13,6 +14,14 @@ const userRouter = makeUserRouter({
 
 app.use(express.json());
 app.use("/user", userRouter);
+
+// mock the hash implementation from the bcrypt library so
+// that it always resolves and doesn't stall or interfere
+// with our tests. This method should always pass so this
+// implementation is okay
+jest.spyOn(bcrypt, "hash").mockImplementation((pass, salt, cb) => {
+  return "123abc";
+});
 
 describe("POST /user", () => {
   describe("Registering a user with good inputs", () => {
@@ -49,6 +58,23 @@ describe("POST /user", () => {
         // ASSERT
         expect(createUser.mock.calls[i][0]).toBe(user);
       });
+    });
+
+    it("hashes user password", async () => {
+      // ARRANGE
+      createUser.mockReset();
+      createUser.mockResolvedValue(1);
+      // mock user
+      const user = {
+        username: "username",
+        password: "password",
+      };
+      // ACT
+      const response = await request(app).post("/user").send(user);
+
+      // ASSERT
+      expect(createUser).toBeCalled();
+      expect(createUser.mock.calls[0][1]).not.toBe(user.password);
     });
   });
 
