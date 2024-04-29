@@ -110,5 +110,24 @@ describe("POST /user", () => {
       expect(response3.statusCode).toBe(400);
       expect(response4.statusCode).toBe(400);
     });
+
+    it("Rejects registration with duplicate usernames", async () => {
+      // ARRANGE
+      createUser.mockReset();
+      // mock the implementation of the function to check for
+      // uniqueness of the username (the database does this for us)
+      createUser.mockImplementation(() => {
+        throw new Error("Username with that name already exists");
+      });
+
+      const user = { username: "user", password: "password" };
+
+      // ACT
+      const response = await request(app).post("/user").send(user);
+
+      // ASSERT
+      // tthe status should be 400
+      expect(response.statusCode).toBe(400);
+    });
   });
 });
