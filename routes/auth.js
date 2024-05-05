@@ -1,32 +1,31 @@
+import express from "express";
+import bycrypt from "bcrypt";
+import { validateUsername } from "../lib/database";
 
-import express from 'express'
-import bycrypt from 'bcrypt'
+export default function (database) {
+  const router = express.Router();
 
-
-const { validateUsername } = require("../lib/database");
-
-const router = express.Router();
-
-router.post('/login', async (req, res) => {
+  router.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        const user = await validateUsername(username);
-        if (!user) {
-            return res.status(404).json({ error: 'Username not found' });
-        }
-        
-        const passwordFromDB = await getPasswordByUsername(username);
-        const match = await bycrypt.compare(password, passwordFromDB);
+      const { user, passwordFromDB } = await validateUsername(username);
+      if (!user) {
+        return res.status(404).json({ error: "Username not found" });
+      }
 
-        if (!match) {
-            return res.status(401).json({ error: 'Invalid password' });
-        }
+      const match = await bycrypt.compare(password, passwordFromDB);
 
-        return res.status(200).json({ message: 'Login successful' });
+      if (!match) {
+        return res.status(401).json({ error: "Invalid password" });
+      }
+
+      return res.status(200).json({ message: "Login successful" });
     } catch (error) {
-        console.error('Error during login:', error);
-        return res.status(500).json({ error: 'Internal server error' });
+      console.error("Error during login:", error);
+      return res.status(500).json({ error: "Internal server error" });
     }
-});
+  });
 
+  return router;
+}
