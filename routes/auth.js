@@ -1,6 +1,5 @@
 import express from "express";
 import bycrypt from "bcrypt";
-import { validateUsername } from "../lib/database";
 
 export default function (database) {
   const router = express.Router();
@@ -9,12 +8,12 @@ export default function (database) {
     const { username, password } = req.body;
 
     try {
-      const { user, passwordFromDB } = await validateUsername(username);
+      const user = await database.validateUsername(username);
       if (!user) {
         return res.status(404).json({ error: "Username not found" });
       }
 
-      const match = await bycrypt.compare(password, passwordFromDB);
+      const match = await bycrypt.compare(password, user.password);
 
       if (!match) {
         return res.status(401).json({ error: "Invalid password" });
