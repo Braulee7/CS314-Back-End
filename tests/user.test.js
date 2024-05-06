@@ -7,9 +7,12 @@ import { jest } from "@jest/globals";
 const app = express();
 // mock the database
 const createUser = jest.fn();
+const searchUser = jest.fn();
+
 // create route
 const userRouter = makeUserRouter({
   createUser,
+  searchUser,
 });
 
 app.use(express.json());
@@ -128,6 +131,44 @@ describe("POST /user", () => {
       // ASSERT
       // tthe status should be 400
       expect(response.statusCode).toBe(400);
+    });
+  });
+});
+
+describe("Get /user", () => {
+  describe("Searching for a user", () => {
+    it("should give a 200 response status", async () => {
+      // ARRANGE
+      searchUser.mockReset();
+      searchUser.mockResolvedValue(["user1", "user2", "user3"]);
+
+      // ACT
+      const response = await request(app).get("/user?username=user");
+
+      // ASSERT
+      expect(response.statusCode).toBe(200);
+    });
+    it("should return a list of users", async () => {
+      // ARRANGE
+      searchUser.mockReset();
+      searchUser.mockResolvedValue(["user1", "user2", "user3"]);
+
+      // ACT
+      const response = await request(app).get("/user?username=user");
+
+      // ASSERT
+      expect(response.body).toEqual(["user1", "user2", "user3"]);
+    });
+    it("should return an empty list if no user is found", async () => {
+      // ARRANGE
+      searchUser.mockReset();
+      searchUser.mockResolvedValue([]);
+
+      // ACT
+      const response = await request(app).get("/user?username=user");
+
+      // ASSERT
+      expect(response.body).toEqual([]);
     });
   });
 });

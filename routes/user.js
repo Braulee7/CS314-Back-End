@@ -31,6 +31,22 @@ export default function (database) {
     }
   });
 
+  // GET localhost:3333/user?username=<username>
+  // paramater: the username we wish to search for
+  // response:
+  //    on success the route will return an array of usernames
+  //    that match the search query. If no usernames match the
+  //    query the route will return an empty array.
+  router.get("/", async (req, res) => {
+    const { username } = req.query;
+    try {
+      const users = await database.searchUser(username);
+      res.status(200).send(users);
+    } catch (e) {
+      res.status(500).send(e.detail);
+    }
+  });
+
   return router;
 }
 
