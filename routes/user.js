@@ -39,6 +39,7 @@ export default function (database) {
   //    query the route will return an empty array.
   router.get("/", async (req, res) => {
     const { username } = req.query;
+    if (!username) res.status(400).send("Need a username to search for");
     try {
       const users = await database.searchUser(username);
       res.status(200).send(users);

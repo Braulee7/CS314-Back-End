@@ -170,5 +170,18 @@ describe("Get /user", () => {
       // ASSERT
       expect(response.body).toEqual([]);
     });
+    it("Should return a 400 response for bad parameters", async () => {
+      // ARRANGE
+      searchUser.mockReset();
+      searchUser.mockResolvedValue([]);
+
+      // ACT
+      const response1 = await request(app).get("/user");
+      const response2 = await request(app).get("/user?");
+
+      // ASSERT
+      expect(response1.statusCode).toBe(400);
+      expect(response2.statusCode).toBe(400);
+    });
   });
 });
