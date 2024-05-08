@@ -4,7 +4,7 @@
 // http://localhost:3333/room/<specific>
 
 import express from "express";
-import { Authenticate } from "../middleware";
+import { Authenticate } from "../middleware/index.js";
 
 // create router
 const router = express.Router();

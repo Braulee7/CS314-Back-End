@@ -6,7 +6,7 @@
 
 import express from "express";
 import bcrypt from "bcrypt";
-import { Authenticate } from "../middleware";
+import { Authenticate } from "../middleware/index.js";
 // create router
 const router = express.Router();
 
