@@ -1,6 +1,7 @@
 import express from "express";
 import bycrypt from "bcrypt";
-import { CreateToken, VerifyToken } from "../lib/util";
+import { config } from "dotenv";
+import { Auth } from "../lib/util.js";
 
 export default function (database) {
   config();
@@ -21,9 +22,9 @@ export default function (database) {
       }
 
       // Creating access token
-      const accessToken = CreateToken(username, "10m");
+      const accessToken = Auth.CreateToken(username, "10m");
       // create refresh token, expires long after access token
-      const refreshToken = CreateToken(username, "1d");
+      const refreshToken = Auth.CreateToken(username, "1d");
 
       // Assigning refresh token in http-only cookie
       res.cookie("refresh", refreshToken, {
@@ -45,9 +46,9 @@ export default function (database) {
       const refreshToken = req.cookies.refresh;
       // Verifying refresh token
       try {
-        const decoded = VerifyToken(refreshToken, false);
+        const decoded = Auth.VerifyToken(refreshToken, false);
         // Correct token we send a new access token
-        const accessToken = CreateToken(decoded.username, "10m");
+        const accessToken = Auth.CreateToken(decoded.username, "10m");
         return res.json({ accessToken, username: decoded.username });
       } catch (error) {
         return res.status(406).json({ message: "Unauthorized" });
