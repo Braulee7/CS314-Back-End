@@ -1,7 +1,6 @@
 import express from "express";
 import bycrypt from "bcrypt";
-import { config } from "dotenv";
-import jwt from "jsonwebtoken";
+import { CreateToken, VerifyToken } from "../lib/util";
 
 export default function (database) {
   config();
@@ -21,27 +20,10 @@ export default function (database) {
         return res.status(401).json({ error: "Invalid password" });
       }
 
-      // code from https://www.geeksforgeeks.org/jwt-authentication-with-refresh-tokens/
-      //creating a access token
-      const accessToken = jwt.sign(
-        {
-          username: username,
-        },
-        process.env.ACCESS_TOKEN_SECRET,
-        {
-          expiresIn: "10m",
-        }
-      );
-      // Creating refresh token not that expiry of refresh
-      //token is greater than the access token
-
-      const refreshToken = jwt.sign(
-        {
-          username: username,
-        },
-        process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: "1d" }
-      );
+      // Creating access token
+      const accessToken = CreateToken(username, "10m");
+      // create refresh token, expires long after access token
+      const refreshToken = CreateToken(username, "1d");
 
       // Assigning refresh token in http-only cookie
       res.cookie("refresh", refreshToken, {
@@ -61,30 +43,15 @@ export default function (database) {
     if (req.cookies?.refresh) {
       // Destructuring refreshToken from cookie
       const refreshToken = req.cookies.refresh;
-      console.log(refreshToken);
       // Verifying refresh token
-      jwt.verify(
-        refreshToken,
-        process.env.REFRESH_TOKEN_SECRET,
-        (err, decoded) => {
-          if (err) {
-            // Wrong Refesh Token
-            return res.status(406).json({ message: "Unauthorized" });
-          } else {
-            // Correct token we send a new access token
-            const accessToken = jwt.sign(
-              {
-                username: decoded.username,
-              },
-              process.env.ACCESS_TOKEN_SECRET,
-              {
-                expiresIn: "10m",
-              }
-            );
-            return res.json({ accessToken, username: decoded.username });
-          }
-        }
-      );
+      try {
+        const decoded = VerifyToken(refreshToken, false);
+        // Correct token we send a new access token
+        const accessToken = CreateToken(decoded.username, "10m");
+        return res.json({ accessToken, username: decoded.username });
+      } catch (error) {
+        return res.status(406).json({ message: "Unauthorized" });
+      }
     } else {
       return res.status(406).json({ message: "Unauthorized" });
     }
