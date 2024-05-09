@@ -3,6 +3,7 @@ import makeUserRouter from "../routes/user.js";
 import bcrypt from "bcrypt";
 import request from "supertest";
 import { jest } from "@jest/globals";
+import { Auth } from "../lib/util.js";
 
 const app = express();
 // mock the database
@@ -25,6 +26,20 @@ app.use("/user", userRouter);
 jest.spyOn(bcrypt, "hash").mockImplementation((pass, salt, cb) => {
   return "123abc";
 });
+// mock the authentication middleware to allow certain token
+jest.spyOn(Auth, "VerifyToken").mockImplementation((token, refresh) => {
+  if (token === "valid") {
+    return { username: "user" };
+  } else {
+    throw new Error("Invalid token");
+  }
+});
+// mock the token creation so it's consistent and should always pass
+jest
+  .spyOn(Auth, "CreateToken")
+  .mockImplementation((username, expiry, access) => {
+    return "valid";
+  });
 
 describe("POST /user", () => {
   describe("Registering a user with good inputs", () => {
@@ -143,7 +158,9 @@ describe("Get /user", () => {
       searchUser.mockResolvedValue(["user1", "user2", "user3"]);
 
       // ACT
-      const response = await request(app).get("/user?username=user");
+      const response = await request(app)
+        .get("/user?username=user")
+        .set("Authorization", "Bearer valid");
 
       // ASSERT
       expect(response.statusCode).toBe(200);
@@ -154,7 +171,9 @@ describe("Get /user", () => {
       searchUser.mockResolvedValue(["user1", "user2", "user3"]);
 
       // ACT
-      const response = await request(app).get("/user?username=user");
+      const response = await request(app)
+        .get("/user?username=user")
+        .set("Authorization", "Bearer valid");
 
       // ASSERT
       expect(response.body).toEqual(["user1", "user2", "user3"]);
@@ -165,7 +184,9 @@ describe("Get /user", () => {
       searchUser.mockResolvedValue([]);
 
       // ACT
-      const response = await request(app).get("/user?username=user");
+      const response = await request(app)
+        .get("/user?username=user")
+        .set("Authorization", "Bearer valid");
 
       // ASSERT
       expect(response.body).toEqual([]);
@@ -176,8 +197,12 @@ describe("Get /user", () => {
       searchUser.mockResolvedValue([]);
 
       // ACT
-      const response1 = await request(app).get("/user");
-      const response2 = await request(app).get("/user?");
+      const response1 = await request(app)
+        .get("/user")
+        .set("Authorization", "Bearer valid");
+      const response2 = await request(app)
+        .get("/user?")
+        .set("Authorization", "Bearer valid");
 
       // ASSERT
       expect(response1.statusCode).toBe(400);

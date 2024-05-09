@@ -4,12 +4,14 @@
 // http://localhost:3333/room/<specific>
 
 import express from "express";
+import { Authenticate } from "../middleware/index.js";
+
 // create router
 const router = express.Router();
 
 // dependency injection with the database for testing purposes
 export default function (database) {
-  router.get("/", async (req, res) => {
+  router.get("/", Authenticate, async (req, res) => {
     const { user1, user2 } = req.query;
     if (!user1 || !user2) res.status(400).send("Need two users to search for");
 
