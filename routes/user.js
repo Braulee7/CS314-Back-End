@@ -32,7 +32,7 @@ export default function (database) {
       // Creating access token
       const accessToken = Auth.CreateToken(username, "10m");
       // create refresh token, expires long after access token
-      const refreshToken = Auth.CreateToken(username, "1d");
+      const refreshToken = Auth.CreateToken(username, "1d", false);
 
       // Assigning refresh token in http-only cookie
       res.cookie("refresh", refreshToken, {

@@ -24,7 +24,7 @@ export default function (database) {
       // Creating access token
       const accessToken = Auth.CreateToken(username, "10m");
       // create refresh token, expires long after access token
-      const refreshToken = Auth.CreateToken(username, "1d");
+      const refreshToken = Auth.CreateToken(username, "1d", false);
 
       // Assigning refresh token in http-only cookie
       res.cookie("refresh", refreshToken, {
@@ -51,10 +51,14 @@ export default function (database) {
         const accessToken = Auth.CreateToken(decoded.username, "10m");
         return res.json({ accessToken, username: decoded.username });
       } catch (error) {
-        return res.status(406).json({ message: "Unauthorized" });
+        return res
+          .status(406)
+          .json({ message: `Unauthorized: ${error.message}` });
       }
     } else {
-      return res.status(406).json({ message: "Unauthorized" });
+      return res
+        .status(406)
+        .json({ message: "Unauthorized: No authentication token provided" });
     }
   });
 
