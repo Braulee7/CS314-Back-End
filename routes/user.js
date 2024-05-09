@@ -7,6 +7,7 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import { Authenticate } from "../middleware/index.js";
+import { Auth } from "../lib/util.js";
 // create router
 const router = express.Router();
 
@@ -25,7 +26,22 @@ export default function (database) {
     try {
       const userid = await database.createUser(username, password);
       // successful creation
-      res.status(201).send({ userId: userid });
+
+      // create JWT tokens
+
+      // Creating access token
+      const accessToken = Auth.CreateToken(username, "10m");
+      // create refresh token, expires long after access token
+      const refreshToken = Auth.CreateToken(username, "1d");
+
+      // Assigning refresh token in http-only cookie
+      res.cookie("refresh", refreshToken, {
+        httpOnly: true,
+        sameSite: "None",
+        secure: true,
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+      return res.status(201).json({ accessToken, username });
     } catch (e) {
       // failure, send information as to why
       res.status(400).send(e.detail);
