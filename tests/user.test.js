@@ -34,6 +34,12 @@ jest.spyOn(Auth, "VerifyToken").mockImplementation((token, refresh) => {
     throw new Error("Invalid token");
   }
 });
+// mock the token creation so it's consistent and should always pass
+jest
+  .spyOn(Auth, "CreateToken")
+  .mockImplementation((username, expiry, access) => {
+    return "valid";
+  });
 
 describe("POST /user", () => {
   describe("Registering a user with good inputs", () => {
