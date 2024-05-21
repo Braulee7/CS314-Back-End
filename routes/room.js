@@ -11,7 +11,9 @@ const router = express.Router();
 
 // dependency injection with the database for testing purposes
 export default function (database) {
-  router.get("/", Authenticate, async (req, res) => {
+  // checks if a room exists between two users and returns the room_id
+  // of the first room if it does
+  router.get("/exists", Authenticate, async (req, res) => {
     const { user1, user2 } = req.query;
     if (!user1 || !user2) res.status(400).send("Need two users to search for");
 

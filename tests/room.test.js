@@ -25,67 +25,69 @@ jest.spyOn(Auth, "VerifyToken").mockImplementation((token, refresh) => {
 });
 
 describe("GET /room", () => {
-  describe("Good inputs", () => {
-    it("should give a 200 response status", async () => {
-      // ARRANGE
-      checkRoomExists.mockReset();
-      checkRoomExists.mockResolvedValue(1);
-      // mock user
-      const user1 = "user1";
-      const user2 = "user2";
-      // ACT
-      const response = await request(app)
-        .get(`/room?user1=${user1}&user2=${user2}`)
-        .set("Authorization", "Bearer valid");
-      // ASSERT
-      expect(response.statusCode).toBe(200);
+  describe("/exists", () => {
+    describe("Good inputs", () => {
+      it("should give a 200 response status", async () => {
+        // ARRANGE
+        checkRoomExists.mockReset();
+        checkRoomExists.mockResolvedValue(1);
+        // mock user
+        const user1 = "user1";
+        const user2 = "user2";
+        // ACT
+        const response = await request(app)
+          .get(`/room/exists?user1=${user1}&user2=${user2}`)
+          .set("Authorization", "Bearer valid");
+        // ASSERT
+        expect(response.statusCode).toBe(200);
+      });
+      it("should return a room_id", async () => {
+        // ARRANGE
+        checkRoomExists.mockReset();
+        checkRoomExists.mockResolvedValue(1);
+        // mock user
+        const user1 = "user1";
+        const user2 = "user2";
+        // ACT
+        const response = await request(app)
+          .get(`/room/exists?user1=${user1}&user2=${user2}`)
+          .set("Authorization", "Bearer valid");
+        // ASSERT
+        expect(response.body.room_id).toBe(1);
+      });
     });
-    it("should return a room_id", async () => {
-      // ARRANGE
-      checkRoomExists.mockReset();
-      checkRoomExists.mockResolvedValue(1);
-      // mock user
-      const user1 = "user1";
-      const user2 = "user2";
-      // ACT
-      const response = await request(app)
-        .get(`/room?user1=${user1}&user2=${user2}`)
-        .set("Authorization", "Bearer valid");
-      // ASSERT
-      expect(response.body.room_id).toBe(1);
-    });
-  });
-  describe("Bad inputs", () => {
-    it("should give a 400 response status", async () => {
-      // ARRANGE
-      checkRoomExists.mockReset();
-      checkRoomExists.mockResolvedValue(-1);
-      // mock user
-      const user1 = "user1";
-      const user2 = "user2";
-      // ACT
-      const response = await request(app)
-        .get(`/room?user1=${user1}&user2=${user2}`)
-        .set("Authorization", "Bearer valid");
-      // ASSERT
-      expect(response.statusCode).toBe(400);
-    });
-    it("Bad paramaters", async () => {
-      // ARRANGE
-      checkRoomExists.mockReset();
-      checkRoomExists.mockResolvedValue(-1);
-      // mock user
-      const user = "user";
-      // ACT
-      const no_user_response = await request(app)
-        .get(`/room`)
-        .set("Authorization", "Bearer valid");
-      const one_user_response = await request(app)
-        .get(`/room?user=${user}`)
-        .set("Authorization", "Bearer valid");
-      // ASSERT
-      expect(no_user_response.statusCode).toBe(400);
-      expect(one_user_response.statusCode).toBe(400);
+    describe("Bad inputs", () => {
+      it("should give a 400 response status", async () => {
+        // ARRANGE
+        checkRoomExists.mockReset();
+        checkRoomExists.mockResolvedValue(-1);
+        // mock user
+        const user1 = "user1";
+        const user2 = "user2";
+        // ACT
+        const response = await request(app)
+          .get(`/room/exists?user1=${user1}&user2=${user2}`)
+          .set("Authorization", "Bearer valid");
+        // ASSERT
+        expect(response.statusCode).toBe(400);
+      });
+      it("Bad paramaters", async () => {
+        // ARRANGE
+        checkRoomExists.mockReset();
+        checkRoomExists.mockResolvedValue(-1);
+        // mock user
+        const user = "user";
+        // ACT
+        const no_user_response = await request(app)
+          .get(`/room/exists`)
+          .set("Authorization", "Bearer valid");
+        const one_user_response = await request(app)
+          .get(`/room/exists?user=${user}`)
+          .set("Authorization", "Bearer valid");
+        // ASSERT
+        expect(no_user_response.statusCode).toBe(400);
+        expect(one_user_response.statusCode).toBe(400);
+      });
     });
   });
 });
