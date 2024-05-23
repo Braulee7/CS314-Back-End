@@ -34,5 +34,23 @@ export default function (database) {
       res.status(500).send(e.detail);
     }
   });
+
+  router.post("/", Authenticate, async (req, res) => {
+    const user = req.username;
+    const { other_user } = req.body;
+
+    if (!other_user) res.status(400).send("Need another user to create a room");
+
+    try {
+      const { id, name } = await database.createDirectMessageRoom(
+        user,
+        other_user
+      );
+      res.status(200).send({ id, name });
+    } catch (e) {
+      res.status(500).send(e.detail);
+    }
+  });
+
   return router;
 }
