@@ -21,9 +21,10 @@ export default function (database) {
       );
 
       //If inserted, notify.
-      res.json(result.rows[0]);
+      res.status(200).json({ success: true, message: 'Message sent.' });
     } catch (err) {
       console.error(err);
+      //Else, error.
       res.status(500).json({error: 'Error occured while sending message.'});
 
     }
