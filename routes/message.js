@@ -9,5 +9,25 @@ const router = express.Router();
 
 // dependency injection with the database for testing purposes
 export default function (database) {
+
+  router.post('/message', async (req, res) => {
+    const { username, room_id, message } = req.body;
+
+    try {
+      //Inserting into the database
+      const result = await database.query(
+        'INSERT INTO messages (username, room_id, message, date_sent) VALUES ($1, $2, $3, NOW()) RETURNING *',
+        [username, room_id, message]
+      );
+
+      //If inserted, notify.
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({error: 'Error occured while sending message.'});
+
+    }
+  });
+
   return router;
 }
