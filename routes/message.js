@@ -14,6 +14,11 @@ export default function (database) {
   router.post("/", Authenticate, async (req, res) => {
     const { room_id, message } = req.body;
     const username = req.username;
+    // verify room_id and message params
+    if (typeof room_id !== "number" || typeof message !== "string") {
+      res.status(400).json({ error: "Missing required parameters" });
+      return;
+    }
 
     try {
       await database.sendMessage(username, room_id, message);
