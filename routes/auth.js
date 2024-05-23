@@ -62,5 +62,24 @@ export default function (database) {
     }
   });
 
+  router.post("/logout", (req, res) => {
+  //Adds current token to blacklist
+    tokenBlacklist.push(req.token);
+  //Invalidating Refresh Token
+    const refreshToken = req.cookies['refreshToken'];
+    if (refreshToken) {
+      RemoveToken(refreshToken);
+    }
+    //Destroying Session and Clearing Cookies
+    req.session.destroy(err => {
+    if(err) {
+      return res.redirect("/dashboard");
+    }
+    res.clearCookie(SESSION_NAME);
+    res.clearCookie('refreshToken');
+    res.redirect("/login");
+    });
+  });
+
   return router;
 }
