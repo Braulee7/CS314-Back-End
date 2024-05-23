@@ -35,6 +35,20 @@ export default function (database) {
     }
   });
 
+  // get all members of a room
+  router.get("/members", Authenticate, async (req, res) => {
+    const { room_id } = req.query;
+    if (!room_id) res.status(400).send("Need a room_id to search for");
+    else if (isNaN(room_id)) res.status(400).send("Room_id must be a number");
+
+    try {
+      const members = await database.getRoomMembers(room_id);
+      res.status(200).send(members);
+    } catch (e) {
+      res.status(500).send(e.detail);
+    }
+  });
+
   router.post("/", Authenticate, async (req, res) => {
     const user = req.username;
     const { other_user } = req.body;

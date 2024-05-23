@@ -9,11 +9,13 @@ const app = express();
 const checkRoomExists = jest.fn();
 const getAllRooms = jest.fn();
 const createDirectMessageRoom = jest.fn();
+const getRoomMembers = jest.fn();
 // create route
 const roomRouter = makeRoomRouter({
   checkRoomExists,
   getAllRooms,
   createDirectMessageRoom,
+  getRoomMembers,
 });
 
 app.use(express.json());
@@ -28,117 +30,173 @@ jest.spyOn(Auth, "VerifyToken").mockImplementation((token, refresh) => {
   }
 });
 
-describe("GET /room", () => {
-  describe("/", () => {
-    describe("Good inputs", () => {
-      it("Should give a 200 response status", async () => {
-        // ARRANGE
-        getAllRooms.mockReset();
-        getAllRooms.mockResolvedValue([]);
-        // ACT
-        const response = await request(app)
-          .get("/room")
-          .set("Authorization", "Bearer valid");
-        // ASSERT
-        expect(response.statusCode).toBe(200);
-      });
+describe("/room", () => {
+  describe("GET /room", () => {
+    describe("/", () => {
+      describe("Good inputs", () => {
+        it("Should give a 200 response status", async () => {
+          // ARRANGE
+          getAllRooms.mockReset();
+          getAllRooms.mockResolvedValue([]);
+          // ACT
+          const response = await request(app)
+            .get("/room")
+            .set("Authorization", "Bearer valid");
+          // ASSERT
+          expect(response.statusCode).toBe(200);
+        });
 
-      it("Should return an empty array", async () => {
-        // ARRANGE
-        getAllRooms.mockReset();
-        getAllRooms.mockResolvedValue([]);
-        // ACT
-        const response = await request(app)
-          .get("/room")
-          .set("Authorization", "Bearer valid");
-        // ASSERT
-        expect(response.body).toEqual([]);
+        it("Should return an empty array", async () => {
+          // ARRANGE
+          getAllRooms.mockReset();
+          getAllRooms.mockResolvedValue([]);
+          // ACT
+          const response = await request(app)
+            .get("/room")
+            .set("Authorization", "Bearer valid");
+          // ASSERT
+          expect(response.body).toEqual([]);
+        });
+      });
+      describe("Bad inputs", () => {
+        it("Should only run when authenticated", async () => {
+          // ARRANGE
+          createDirectMessageRoom.mockReset();
+          // ACT
+          const response = await request(app).get("/room/");
+          // ASSERT
+          expect(response.statusCode).toBe(401);
+        });
       });
     });
+
+    describe("/exists", () => {
+      describe("Good inputs", () => {
+        it("should give a 200 response status", async () => {
+          // ARRANGE
+          checkRoomExists.mockReset();
+          checkRoomExists.mockResolvedValue(1);
+          // mock user
+          const user1 = "user1";
+          const user2 = "user2";
+          // ACT
+          const response = await request(app)
+            .get(`/room/exists?user1=${user1}&user2=${user2}`)
+            .set("Authorization", "Bearer valid");
+          // ASSERT
+          expect(response.statusCode).toBe(200);
+        });
+        it("should return a room_id", async () => {
+          // ARRANGE
+          checkRoomExists.mockReset();
+          checkRoomExists.mockResolvedValue(1);
+          // mock user
+          const user1 = "user1";
+          const user2 = "user2";
+          // ACT
+          const response = await request(app)
+            .get(`/room/exists?user1=${user1}&user2=${user2}`)
+            .set("Authorization", "Bearer valid");
+          // ASSERT
+          expect(response.body.room_id).toBe(1);
+        });
+      });
+      describe("Bad inputs", () => {
+        it("should give a 400 response status", async () => {
+          // ARRANGE
+          checkRoomExists.mockReset();
+          checkRoomExists.mockResolvedValue(-1);
+          // mock user
+          const user1 = "user1";
+          const user2 = "user2";
+          // ACT
+          const response = await request(app)
+            .get(`/room/exists?user1=${user1}&user2=${user2}`)
+            .set("Authorization", "Bearer valid");
+          // ASSERT
+          expect(response.statusCode).toBe(400);
+        });
+        it("Bad paramaters", async () => {
+          // ARRANGE
+          checkRoomExists.mockReset();
+          checkRoomExists.mockResolvedValue(-1);
+          // mock user
+          const user = "user";
+          // ACT
+          const no_user_response = await request(app)
+            .get(`/room/exists`)
+            .set("Authorization", "Bearer valid");
+          const one_user_response = await request(app)
+            .get(`/room/exists?user=${user}`)
+            .set("Authorization", "Bearer valid");
+          // ASSERT
+          expect(no_user_response.statusCode).toBe(400);
+          expect(one_user_response.statusCode).toBe(400);
+        });
+        it("Should only run when authenticated", async () => {
+          // ARRANGE
+          createDirectMessageRoom.mockReset();
+          // ACT
+          const response = await request(app).get("/room/exists?user=username");
+          // ASSERT
+          expect(response.statusCode).toBe(401);
+        });
+      });
+    });
+
+    describe("/members", () => {
+      describe("Good inputs", () => {
+        it("Should return list of members", async () => {
+          // ARRANGE
+          // mock the database
+          getRoomMembers.mockReset();
+          getRoomMembers.mockResolvedValue([
+            { username: "user" },
+            { username: "user2" },
+          ]);
+
+          // ACT
+          const response = await request(app)
+            .get("/room/members?room_id=1")
+            .set("Authorization", "Bearer valid");
+
+          // ASSERT
+          expect(response.statusCode).toBe(200);
+          expect(response.body).toEqual([
+            { username: "user" },
+            { username: "user2" },
+          ]);
+        });
+      });
+    });
+
     describe("Bad inputs", () => {
+      it("Shouldn't accept bad paramaters", async () => {
+        // ARRANGE
+        getRoomMembers.mockReset();
+        // ACT
+        const string_response = await request(app)
+          .get("/room/members?room_id=bad")
+          .set("Authorization", "Bearer valid");
+        const no_room_response = await request(app)
+          .get("/room/members")
+          .set("Authorization", "Bearer valid");
+
+        // ASSERT
+        expect(string_response.statusCode).toBe(400);
+        expect(no_room_response.statusCode).toBe(400);
+      });
       it("Should only run when authenticated", async () => {
         // ARRANGE
-        createDirectMessageRoom.mockReset();
+        getRoomMembers.mockReset();
         // ACT
-        const response = await request(app).get("/room/");
+        const response = await request(app).get("/room/members?room_id=1");
         // ASSERT
         expect(response.statusCode).toBe(401);
       });
     });
   });
-  describe("/exists", () => {
-    describe("Good inputs", () => {
-      it("should give a 200 response status", async () => {
-        // ARRANGE
-        checkRoomExists.mockReset();
-        checkRoomExists.mockResolvedValue(1);
-        // mock user
-        const user1 = "user1";
-        const user2 = "user2";
-        // ACT
-        const response = await request(app)
-          .get(`/room/exists?user1=${user1}&user2=${user2}`)
-          .set("Authorization", "Bearer valid");
-        // ASSERT
-        expect(response.statusCode).toBe(200);
-      });
-      it("should return a room_id", async () => {
-        // ARRANGE
-        checkRoomExists.mockReset();
-        checkRoomExists.mockResolvedValue(1);
-        // mock user
-        const user1 = "user1";
-        const user2 = "user2";
-        // ACT
-        const response = await request(app)
-          .get(`/room/exists?user1=${user1}&user2=${user2}`)
-          .set("Authorization", "Bearer valid");
-        // ASSERT
-        expect(response.body.room_id).toBe(1);
-      });
-    });
-    describe("Bad inputs", () => {
-      it("should give a 400 response status", async () => {
-        // ARRANGE
-        checkRoomExists.mockReset();
-        checkRoomExists.mockResolvedValue(-1);
-        // mock user
-        const user1 = "user1";
-        const user2 = "user2";
-        // ACT
-        const response = await request(app)
-          .get(`/room/exists?user1=${user1}&user2=${user2}`)
-          .set("Authorization", "Bearer valid");
-        // ASSERT
-        expect(response.statusCode).toBe(400);
-      });
-      it("Bad paramaters", async () => {
-        // ARRANGE
-        checkRoomExists.mockReset();
-        checkRoomExists.mockResolvedValue(-1);
-        // mock user
-        const user = "user";
-        // ACT
-        const no_user_response = await request(app)
-          .get(`/room/exists`)
-          .set("Authorization", "Bearer valid");
-        const one_user_response = await request(app)
-          .get(`/room/exists?user=${user}`)
-          .set("Authorization", "Bearer valid");
-        // ASSERT
-        expect(no_user_response.statusCode).toBe(400);
-        expect(one_user_response.statusCode).toBe(400);
-      });
-      it("Should only run when authenticated", async () => {
-        // ARRANGE
-        createDirectMessageRoom.mockReset();
-        // ACT
-        const response = await request(app).get("/room/exists?user=username");
-        // ASSERT
-        expect(response.statusCode).toBe(401);
-      });
-    });
-  });
+
   describe("POST /room", () => {
     describe("Good inputs", () => {
       it("Should return the room information", async () => {
@@ -147,7 +205,10 @@ describe("GET /room", () => {
         const user = "user";
         // mock the database
         createDirectMessageRoom.mockReset();
-        createDirectMessageRoom.mockResolvedValue({ id: 1, name: "room_name" });
+        createDirectMessageRoom.mockResolvedValue({
+          id: 1,
+          name: "room_name",
+        });
 
         // ACT
         const response = await request(app)
