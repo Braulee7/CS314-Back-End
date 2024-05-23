@@ -7,9 +7,11 @@ import { Auth } from "../lib/util";
 const app = express();
 // mock the database
 const checkRoomExists = jest.fn();
+const getAllRooms = jest.fn();
 // create route
 const roomRouter = makeRoomRouter({
   checkRoomExists,
+  getAllRooms,
 });
 
 app.use(express.json());
@@ -25,6 +27,31 @@ jest.spyOn(Auth, "VerifyToken").mockImplementation((token, refresh) => {
 });
 
 describe("GET /room", () => {
+  describe("/", () => {
+    it("Should give a 200 response status", async () => {
+      // ARRANGE
+      getAllRooms.mockReset();
+      getAllRooms.mockResolvedValue([]);
+      // ACT
+      const response = await request(app)
+        .get("/room")
+        .set("Authorization", "Bearer valid");
+      // ASSERT
+      expect(response.statusCode).toBe(200);
+    });
+
+    it("Should return an empty array", async () => {
+      // ARRANGE
+      getAllRooms.mockReset();
+      getAllRooms.mockResolvedValue([]);
+      // ACT
+      const response = await request(app)
+        .get("/room")
+        .set("Authorization", "Bearer valid");
+      // ASSERT
+      expect(response.body).toEqual([]);
+    });
+  });
   describe("/exists", () => {
     describe("Good inputs", () => {
       it("should give a 200 response status", async () => {
