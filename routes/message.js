@@ -14,14 +14,20 @@ export default function (database) {
   router.post("/", Authenticate, async (req, res) => {
     const { room_id, message } = req.body;
     const username = req.username;
+
     // verify room_id and message params
-    if (typeof room_id !== "number" || typeof message !== "string") {
+    if (!room_id || !message) {
+      res.status(400).json({ error: "Missing required parameters" });
+      return;
+    }
+    const room_id_int = parseInt(room_id);
+    if (isNaN(room_id_int) || typeof message !== "string") {
       res.status(400).json({ error: "Missing required parameters" });
       return;
     }
 
     try {
-      await database.sendMessage(username, room_id, message);
+      await database.sendMessage(username, room_id_int, message);
       //If inserted, notify.
       res.status(200).json({ success: true, message: "Message sent." });
     } catch (err) {
