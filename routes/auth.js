@@ -6,6 +6,8 @@ import { Auth } from "../lib/util.js";
 export default function (database) {
   config();
   const router = express.Router();
+  const blacklist = [];
+
 
   router.post("/login", async (req, res) => {
     const { username, password } = req.body;
@@ -71,14 +73,14 @@ export default function (database) {
       RemoveToken(refreshToken);
     }
     //Destroying Session and Clearing Cookies
-    req.session.destroy(err => {
-    if(err) {
-      return res.redirect("/dashboard");
-    }
-    res.clearCookie(SESSION_NAME);
-    res.clearCookie('refreshToken');
-    res.redirect("/login");
+    res.clearCookie("refresh", {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+      maxAge: 0,
     });
+
+    res.end();
   });
 
   return router;
