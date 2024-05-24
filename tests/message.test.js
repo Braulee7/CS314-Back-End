@@ -6,13 +6,15 @@ import { Auth } from "../lib/util";
 
 // mock the database
 const sendMessage = jest.fn();
+const getMessages = jest.fn();
 const messageRouter = makeMessageRouter({
   sendMessage,
+  getMessages,
 });
 
 const app = express();
 app.use(express.json());
-app.use("/", messageRouter);
+app.use("/message", messageRouter);
 
 // mock the authentication middleware to allow certain token
 jest.spyOn(Auth, "VerifyToken").mockImplementation((token, refresh) => {
@@ -32,7 +34,7 @@ describe("Message route", () => {
       const params = { message: "hello", room_id: 1 };
       // ACT
       const response = await request(app)
-        .post("/")
+        .post("/message")
         .set("Authorization", "Bearer valid")
         .send(params);
 
@@ -46,19 +48,19 @@ describe("Message route", () => {
       const params = { message: "hello" };
       // ACT
       const no_room_response = await request(app)
-        .post("/")
+        .post("/message")
         .set("Authorization", "Bearer valid")
         .send({ message: "hello" });
       const no_message_response = await request(app)
-        .post("/")
+        .post("/message")
         .set("Authorization", "Bearer valid")
         .send({ room_id: 1 });
       const no_param_response = await request(app)
-        .post("/")
+        .post("/message")
         .set("Authorization", "Bearer valid")
         .send({});
       const bad_types_response = await request(app)
-        .post("/")
+        .post("/message")
         .set("Authorization", "Bearer valid")
         .send({ message: 1, room_id: "1" });
       // ASSERT
@@ -66,6 +68,39 @@ describe("Message route", () => {
       expect(no_message_response.statusCode).toBe(400);
       expect(no_param_response.statusCode).toBe(400);
       expect(bad_types_response.statusCode).toBe(400);
+    });
+  });
+  describe("Given a get request", () => {
+    it("Should respond with a list of messages", async () => {
+      // ARRANGE
+      const messages = [{ message: "hello", sending_user: "user" }];
+      getMessages.mockReset();
+      getMessages.mockResolvedValue(messages);
+
+      // ACT
+      const response = await request(app)
+        .get("/message?room_id=1")
+        .set("Authorization", "Bearer valid");
+
+      // ASSERT
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toEqual({ messages: messages });
+    });
+    it("Should return a 400 response with bad inputs", async () => {
+      // ARRANGE
+      getMessages.mockReset();
+      getMessages.mockResolvedValue([]);
+      // ACT
+      const no_room_response = await request(app)
+        .get("/message")
+        .set("Authorization", "Bearer valid");
+      const bad_room_response = await request(app)
+        .get("/message?room_id=bad")
+        .set("Authorization", "Bearer valid");
+
+      // ASSERT
+      expect(no_room_response.statusCode).toBe(400);
+      expect(bad_room_response.statusCode).toBe(400);
     });
   });
 });

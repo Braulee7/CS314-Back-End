@@ -31,5 +31,24 @@ export default function (database) {
     }
   });
 
+  router.get("/", Authenticate, async (req, res) => {
+    const { room_id } = req.query;
+    if (!room_id) {
+      return res.status(400).json({ error: "Missing required parameters" });
+    }
+    let room_id_int = parseInt(room_id);
+    if (isNaN(room_id_int)) {
+      return res.status(400).json({ error: "Invalid room_id" });
+    }
+
+    try {
+      const messages = await database.getMessages(room_id);
+      res.status(200).json({ messages });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: "Error occured while getting messages." });
+    }
+  });
+
   return router;
 }
