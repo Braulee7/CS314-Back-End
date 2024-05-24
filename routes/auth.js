@@ -6,6 +6,8 @@ import { Auth } from "../lib/util.js";
 export default function (database) {
   config();
   const router = express.Router();
+  const blacklist = [];
+
 
   router.post("/login", async (req, res) => {
     const { username, password } = req.body;
@@ -60,6 +62,25 @@ export default function (database) {
         .status(406)
         .json({ message: "Unauthorized: No authentication token provided" });
     }
+  });
+
+  router.post("/logout", (req, res) => {
+  //Adds current token to blacklist
+    tokenBlacklist.push(req.token);
+  //Invalidating Refresh Token
+    const refreshToken = req.cookies['refreshToken'];
+    if (refreshToken) {
+      RemoveToken(refreshToken);
+    }
+    //Destroying Session and Clearing Cookies
+    res.clearCookie("refresh", {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+      maxAge: 0,
+    });
+
+    res.end();
   });
 
   return router;
