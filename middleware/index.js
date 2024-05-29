@@ -1,6 +1,6 @@
 import { Auth } from "../lib/util.js";
 
-export function Authenticate(req, res, next) {
+export function AuthenticateRoute(req, res, next) {
   const bearer = req.headers.authorization;
   if (!bearer) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -12,5 +12,18 @@ export function Authenticate(req, res, next) {
     next();
   } catch (error) {
     return res.status(401).json({ error: "Unauthorized" });
+  }
+}
+
+export function AuthenticateSocket(socket, next) {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    next(new Error("Not authorized"));
+  }
+  try {
+    const decoded = Auth.VerifyToken(token, true);
+    next();
+  } catch (e) {
+    next(e);
   }
 }
