@@ -4,14 +4,14 @@
 // http://localhost:3333/room/<specific>
 
 import express from "express";
-import { Authenticate } from "../middleware/index.js";
+import { AuthenticateRoute } from "../middleware/index.js";
 
 // create router
 const router = express.Router();
 
 // dependency injection with the database for testing purposes
 export default function (database) {
-  router.get("/", Authenticate, async (req, res) => {
+  router.get("/", AuthenticateRoute, async (req, res) => {
     const user = req.username;
     try {
       const rooms = await database.getAllRooms(user);
@@ -22,7 +22,7 @@ export default function (database) {
   });
   // checks if a room exists between two users and returns the room_id
   // of the first room if it does
-  router.get("/exists", Authenticate, async (req, res) => {
+  router.get("/exists", AuthenticateRoute, async (req, res) => {
     const { user1, user2 } = req.query;
     if (!user1 || !user2) res.status(400).send("Need two users to search for");
 
@@ -36,7 +36,7 @@ export default function (database) {
   });
 
   // get all members of a room
-  router.get("/members", Authenticate, async (req, res) => {
+  router.get("/members", AuthenticateRoute, async (req, res) => {
     const { room_id } = req.query;
     if (!room_id) res.status(400).send("Need a room_id to search for");
     else if (isNaN(room_id)) res.status(400).send("Room_id must be a number");
@@ -49,7 +49,7 @@ export default function (database) {
     }
   });
 
-  router.post("/", Authenticate, async (req, res) => {
+  router.post("/", AuthenticateRoute, async (req, res) => {
     const user = req.username;
     const { other_user } = req.body;
 

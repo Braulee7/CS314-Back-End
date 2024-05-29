@@ -6,7 +6,7 @@
 
 import express from "express";
 import bcrypt from "bcrypt";
-import { Authenticate } from "../middleware/index.js";
+import { AuthenticateRoute } from "../middleware/index.js";
 import { Auth } from "../lib/util.js";
 // create router
 const router = express.Router();
@@ -54,7 +54,7 @@ export default function (database) {
   //    on success the route will return an array of usernames
   //    that match the search query. If no usernames match the
   //    query the route will return an empty array.
-  router.get("/", Authenticate, async (req, res) => {
+  router.get("/", AuthenticateRoute, async (req, res) => {
     const { username } = req.query;
     if (!username) res.status(400).send("Need a username to search for");
     try {
