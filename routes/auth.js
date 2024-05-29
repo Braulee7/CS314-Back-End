@@ -8,7 +8,6 @@ export default function (database) {
   const router = express.Router();
   const blacklist = [];
 
-
   router.post("/login", async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -46,6 +45,11 @@ export default function (database) {
     if (req.cookies?.refresh) {
       // Destructuring refreshToken from cookie
       const refreshToken = req.cookies.refresh;
+      if (blacklist.includes(refreshToken)) {
+        return res
+          .status(406)
+          .json({ message: "Unauthorized: Expired refresh token" });
+      }
       // Verifying refresh token
       try {
         const decoded = Auth.VerifyToken(refreshToken, false);
@@ -65,12 +69,11 @@ export default function (database) {
   });
 
   router.post("/logout", (req, res) => {
-  //Adds current token to blacklist
-    tokenBlacklist.push(req.token);
-  //Invalidating Refresh Token
-    const refreshToken = req.cookies['refreshToken'];
+    //Invalidating Refresh Token
+    const refreshToken = req.cookies.refresh;
     if (refreshToken) {
-      RemoveToken(refreshToken);
+      //Adds current token to blacklist
+      blacklist.push(refreshToken);
     }
     //Destroying Session and Clearing Cookies
     res.clearCookie("refresh", {
