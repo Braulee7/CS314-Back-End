@@ -27,9 +27,13 @@ export default function (database) {
     }
 
     try {
-      await database.sendMessage(username, room_id_int, message);
+      const message_obj = await database.sendMessage(
+        username,
+        room_id_int,
+        message
+      );
       //If inserted, notify.
-      res.status(200).json({ success: true, message: "Message sent." });
+      res.status(200).json(message_obj);
     } catch (err) {
       console.error(err);
       //Else, error.
