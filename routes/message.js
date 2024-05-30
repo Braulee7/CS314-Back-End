@@ -5,13 +5,13 @@
 // http://localhost:3333/message/<specific>
 
 import express from "express";
-import { Authenticate } from "../middleware/index.js";
+import { AuthenticateRoute } from "../middleware/index.js";
 
 const router = express.Router();
 
 // dependency injection with the database for testing purposes
 export default function (database) {
-  router.post("/", Authenticate, async (req, res) => {
+  router.post("/", AuthenticateRoute, async (req, res) => {
     const { room_id, message } = req.body;
     const username = req.username;
 
@@ -27,9 +27,13 @@ export default function (database) {
     }
 
     try {
-      await database.sendMessage(username, room_id_int, message);
+      const message_obj = await database.sendMessage(
+        username,
+        room_id_int,
+        message
+      );
       //If inserted, notify.
-      res.status(200).json({ success: true, message: "Message sent." });
+      res.status(200).json(message_obj);
     } catch (err) {
       console.error(err);
       //Else, error.
@@ -37,7 +41,7 @@ export default function (database) {
     }
   });
 
-  router.get("/", Authenticate, async (req, res) => {
+  router.get("/", AuthenticateRoute, async (req, res) => {
     const { room_id } = req.query;
     if (!room_id) {
       return res.status(400).json({ error: "Missing required parameters" });
