@@ -74,29 +74,16 @@ export default function (database) {
     }
   
     try {
-      const adminCheckQuery = 'SELECT admin_user FROM minstant_messenger.rooms WHERE room_id = $1;';
-      const adminCheckResult = await pool.query(adminCheckQuery, [roomId]);
-
-      if (adminCheckResult.rowCount === 0) {
+      const deleteQuery = 'DELETE FROM minstant_messenger.rooms WHERE room_id = $1;';
+      const result = await pool.query(deleteQuery, [roomId]);
+      if (result.rowCount === 0) {
         return res.status(404).json({ message: 'Room not found' });
       }
-
-      if (adminCheckResult.rows[0].admin_user !== req.username) {
-        return res.status(403).json({ message: 'User is not authorized to delete this room' });
-      }
-
-      const deleteQuery = 'DELETE FROM minstant_messenger.rooms WHERE room_id = $1;';
-    const result = await pool.query(deleteQuery, [roomId]);
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Room not found' });
+      res.status(200).json({ message: 'Room removed successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Error removing room', error: error.message });
     }
-
-    res.status(200).json({ message: 'Room removed successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error removing room', error: error.message });
-  }
-});
+  });
 
   return router;
 }
