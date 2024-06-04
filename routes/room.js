@@ -66,22 +66,49 @@ export default function (database) {
     }
   });
 
-  router.delete('/room/:roomId', AuthenticateRoute, async (req, res) => {
+  router.delete("/room/:roomId", AuthenticateRoute, async (req, res) => {
     const roomId = parseInt(req.params.roomId, 10);
-    
+
     if (isNaN(roomId)) {
-      return res.status(400).json({ message: 'Invalid room ID' });
+      return res.status(400).json({ message: "Invalid room ID" });
     }
-  
+
     try {
-      const deleteQuery = 'DELETE FROM minstant_messenger.rooms WHERE room_id = $1;';
+      const deleteQuery =
+        "DELETE FROM minstant_messenger.rooms WHERE room_id = $1;";
       const result = await pool.query(deleteQuery, [roomId]);
       if (result.rowCount === 0) {
-        return res.status(404).json({ message: 'Room not found' });
+        return res.status(404).json({ message: "Room not found" });
       }
-      res.status(200).json({ message: 'Room removed successfully' });
+      res.status(200).json({ message: "Room removed successfully" });
     } catch (error) {
-      res.status(500).json({ message: 'Error removing room', error: error.message });
+      res
+        .status(500)
+        .json({ message: "Error removing room", error: error.message });
+    }
+  });
+
+  router.post("/group", AuthenticateRoute, async (req, res) => {
+    const admin_user = req.username;
+    const { room_name, members } = req.body;
+
+    if (!room_name || !members)
+      res
+        .status(402)
+        .send("Need a room name and list of members to create a group");
+    // make sure members is an array of strings
+    if (!Array.isArray(members))
+      res.status(402).send("Members must be an array");
+
+    try {
+      const response = await database.createGroupRoom(
+        admin_user,
+        members,
+        room_name
+      );
+      res.status(200).send(response);
+    } catch (e) {
+      res.status(500).send(e.detail);
     }
   });
 
