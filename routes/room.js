@@ -66,20 +66,16 @@ export default function (database) {
     }
   });
 
-  router.delete("/room/:roomId", AuthenticateRoute, async (req, res) => {
-    const roomId = parseInt(req.params.roomId, 10);
+  router.delete("/", AuthenticateRoute, async (req, res) => {
+    const room_id_string = req.query.room_id;
+    const room_id = parseInt(room_id_string, 10);
 
-    if (isNaN(roomId)) {
+    if (isNaN(room_id)) {
       return res.status(400).json({ message: "Invalid room ID" });
     }
 
     try {
-      const deleteQuery =
-        "DELETE FROM minstant_messenger.rooms WHERE room_id = $1;";
-      const result = await pool.query(deleteQuery, [roomId]);
-      if (result.rowCount === 0) {
-        return res.status(404).json({ message: "Room not found" });
-      }
+      await database.deleteRoom(room_id);
       res.status(200).json({ message: "Room removed successfully" });
     } catch (error) {
       res

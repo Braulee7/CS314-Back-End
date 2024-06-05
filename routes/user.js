@@ -24,7 +24,7 @@ export default function (database) {
   router.post("/", hash, async (req, res) => {
     const { username, password } = req.body;
     try {
-      const userid = await database.createUser(username, password);
+      await database.createUser(username, password);
       // successful creation
 
       // create JWT tokens
