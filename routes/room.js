@@ -89,12 +89,12 @@ export default function (database) {
     const { room_name, members } = req.body;
 
     if (!room_name || !members)
-      res
+      return res
         .status(402)
         .send("Need a room name and list of members to create a group");
     // make sure members is an array of strings
     if (!Array.isArray(members))
-      res.status(402).send("Members must be an array");
+      return res.status(402).send("Members must be an array");
 
     try {
       const response = await database.createGroupRoom(

@@ -146,59 +146,6 @@ describe("/room", () => {
       });
     });
 
-    describe("/group", () => {
-      describe("Good inputs", () => {
-        test("Should return the room information", async () => {
-          // ARRANGE
-          // mock the database
-          createGroupRoom.mockReset();
-          createGroupRoom.mockResolvedValue({
-            id: 1,
-            name: "room_name",
-          });
-
-          // ACT
-          const response = await request(app)
-            .put("/room/group")
-            .set("Authorization", "Bearer valid")
-            .send({ members: ["user1", "user2"], name: "room_name" });
-
-          // ASSERT
-          expect(response.statusCode).toBe(200);
-          expect(createGroupRoom).toHaveBeenCalledWith(
-            ["user1", "user2"],
-            "room_name"
-          );
-          expect(response.body).toEqual({
-            id: 1,
-            name: "room_name",
-          });
-        });
-        test("Shouldn't accept bad inputs", async () => {
-          // ARRANGE
-          createGroupRoom.mockReset();
-          // ACT
-          const non_array_response = await request(app)
-            .put("/room/group")
-            .set("Authorization", "Bearer valid")
-            .send({ members: "user1", name: "room_name" });
-          const no_name_response = await request(app)
-            .put("/room/group")
-            .set("Authorization", "Bearer valid")
-            .send({ members: ["user1", "user2"] });
-          const no_members_response = await request(app)
-            .put("/room/group")
-            .set("Authorization", "Bearer valid")
-            .send({ name: "room_name" });
-
-          // ASSERT
-          expect(non_array_response.statusCode).toBe(402);
-          expect(no_name_response.statusCode).toBe(402);
-          expect(no_members_response.statusCode).toBe(402);
-        });
-      });
-    });
-
     describe("/members", () => {
       describe("Good inputs", () => {
         it("Should return list of members", async () => {
@@ -253,6 +200,60 @@ describe("/room", () => {
   });
 
   describe("POST /room", () => {
+    describe("/group", () => {
+      describe("Good inputs", () => {
+        test("Should return the room information", async () => {
+          // ARRANGE
+          // mock the database
+          createGroupRoom.mockReset();
+          createGroupRoom.mockResolvedValue({
+            id: 1,
+            name: "room_name",
+          });
+
+          // ACT
+          const response = await request(app)
+            .post("/room/group")
+            .set("Authorization", "Bearer valid")
+            .send({ members: ["user1", "user2"], room_name: "room_name" });
+
+          // ASSERT
+          expect(response.statusCode).toBe(200);
+          expect(createGroupRoom).toHaveBeenCalledWith(
+            "user",
+            ["user1", "user2"],
+            "room_name"
+          );
+          expect(response.body).toEqual({
+            id: 1,
+            name: "room_name",
+          });
+        });
+        test("Shouldn't accept bad inputs", async () => {
+          // ARRANGE
+          createGroupRoom.mockReset();
+          // ACT
+          const non_array_response = await request(app)
+            .post("/room/group")
+            .set("Authorization", "Bearer valid")
+            .send({ members: "user1", name: "room_name" });
+          const no_name_response = await request(app)
+            .post("/room/group")
+            .set("Authorization", "Bearer valid")
+            .send({ members: ["user1", "user2"] });
+          const no_members_response = await request(app)
+            .post("/room/group")
+            .set("Authorization", "Bearer valid")
+            .send({ name: "room_name" });
+
+          // ASSERT
+          expect(non_array_response.statusCode).toBe(402);
+          expect(no_name_response.statusCode).toBe(402);
+          expect(no_members_response.statusCode).toBe(402);
+        });
+      });
+    });
+
     describe("Good inputs", () => {
       it("Should return the room information", async () => {
         // ARRANGE
